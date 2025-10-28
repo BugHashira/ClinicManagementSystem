@@ -2,6 +2,7 @@
 using ClinicManagementSystem.Application.DTOs;
 using ClinicManagementSystem.Domain.Entities;
 using ClinicManagementSystem.Infrastructure.Interfaces;
+using System;
 
 namespace ClinicManagementSystem.API.Services;
 
@@ -20,9 +21,7 @@ public class InvoiceService(IInvoiceRepository invoiceRepo, IPatientRepository p
                 Id = inv.Id,
                 PatientId = inv.PatientId,
                 PatientName = patientName,
-                Amount = inv.GrandTotal,
-                Description = string.Empty,
-                InvoiceDate = DateTime.MinValue
+                Amount = inv.GrandTotal
             });
         }
 
@@ -41,9 +40,7 @@ public class InvoiceService(IInvoiceRepository invoiceRepo, IPatientRepository p
             Id = inv.Id,
             PatientId = inv.PatientId,
             PatientName = patientName,
-            Amount = inv.GrandTotal,
-            Description = string.Empty,
-            InvoiceDate = DateTime.MinValue
+            Amount = inv.GrandTotal
         };
     }
 
@@ -56,7 +53,7 @@ public class InvoiceService(IInvoiceRepository invoiceRepo, IPatientRepository p
             SubTotal = dto.Amount,
             DiscountTotal = 0m,
             GrandTotal = dto.Amount,
-            InvoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N").Substring(0, 6)}"
+            InvoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N").Substring(0, 6)}",
         };
 
         await invoiceRepo.AddAsync(invoice);
@@ -70,8 +67,6 @@ public class InvoiceService(IInvoiceRepository invoiceRepo, IPatientRepository p
             PatientId = invoice.PatientId,
             PatientName = patientName,
             Amount = invoice.GrandTotal,
-            Description = string.Empty,
-            InvoiceDate = DateTime.MinValue
         };
     }
 
@@ -80,6 +75,7 @@ public class InvoiceService(IInvoiceRepository invoiceRepo, IPatientRepository p
         var invoice = await invoiceRepo.GetByIdAsync(id);
         if (invoice == null) return false;
 
+        // Map all updatable fields from the DTO
         invoice.SubTotal = dto.Amount;
         invoice.GrandTotal = dto.Amount;
 

@@ -1,21 +1,28 @@
-﻿using ClinicManagementSystem.API.Services.Interfaces;
-using ClinicManagementSystem.Application.DTOs;
+﻿using ClinicManagementSystem.Application.DTOs;
 using ClinicManagementSystem.Domain.Entities;
 using ClinicManagementSystem.Infrastructure.Interfaces;
+using ClinicManagementSystem.API.Services.Interfaces;
 
 namespace ClinicManagementSystem.API.Services;
 
-public class PatientService(IPatientRepository patientRepo) : IPatientService
+public class PatientService : IPatientService
 {
+    private readonly IPatientRepository _patientRepo;
+
+    public PatientService(IPatientRepository patientRepo)
+    {
+        _patientRepo = patientRepo;
+    }
+
     public async Task<IEnumerable<PatientReadDto>> GetAllAsync()
     {
-        var patients = await patientRepo.GetAllAsync();
+        var patients = await _patientRepo.GetAllAsync();
         return patients.Select(MapToReadDto);
     }
 
     public async Task<PatientReadDto?> GetByIdAsync(Guid id)
     {
-        var patient = await patientRepo.GetByIdAsync(id);
+        var patient = await _patientRepo.GetByIdAsync(id);
         return patient == null ? null : MapToReadDto(patient);
     }
 
@@ -26,6 +33,7 @@ public class PatientService(IPatientRepository patientRepo) : IPatientService
         var patient = new Patient
         {
             Id = Guid.NewGuid(),
+            PatientCode = GeneratePatientCode(),
             FirstName = firstName,
             LastName = lastName,
             DateOfBirth = dto.DateOfBirth,
@@ -34,15 +42,15 @@ public class PatientService(IPatientRepository patientRepo) : IPatientService
             ContactAddress = dto.Address
         };
 
-        await patientRepo.AddAsync(patient);
-        await patientRepo.SaveChangesAsync();
+        await _patientRepo.AddAsync(patient);
+        await _patientRepo.SaveChangesAsync();
 
         return MapToReadDto(patient);
     }
 
     public async Task<bool> UpdateAsync(Guid id, PatientUpdateDto dto)
     {
-        var patient = await patientRepo.GetByIdAsync(id);
+        var patient = await _patientRepo.GetByIdAsync(id);
         if (patient == null) return false;
 
         var (firstName, lastName) = SplitFullName(dto.FullName);
@@ -54,19 +62,19 @@ public class PatientService(IPatientRepository patientRepo) : IPatientService
         patient.Email = dto.Email;
         patient.ContactAddress = dto.Address;
 
-        patientRepo.Update(patient);
-        await patientRepo.SaveChangesAsync();
+        _patientRepo.Update(patient);
+        await _patientRepo.SaveChangesAsync();
 
         return true;
     }
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var patient = await patientRepo.GetByIdAsync(id);
+        var patient = await _patientRepo.GetByIdAsync(id);
         if (patient == null) return false;
 
-        patientRepo.Delete(patient);
-        await patientRepo.SaveChangesAsync();
+        _patientRepo.Delete(patient);
+        await _patientRepo.SaveChangesAsync();
 
         return true;
     }
@@ -89,5 +97,11 @@ public class PatientService(IPatientRepository patientRepo) : IPatientService
         if (string.IsNullOrWhiteSpace(fullName)) return (string.Empty, string.Empty);
         var parts = fullName.Trim().Split(' ', 2);
         return parts.Length == 1 ? (parts[0], string.Empty) : (parts[0], parts[1]);
+    }
+
+    private static string GeneratePatientCode()
+    {
+        // Simple unique code; change format to your convention if needed
+        return $"P-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N").Substring(0, 6)}";
     }
 }
