@@ -4,45 +4,51 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicManagementSystem.API.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-public class InvoicesController(IInvoiceService service) : ControllerBase
+[ApiController]
+public class InvoicesController(IInvoiceService invoiceService) : ControllerBase
 {
+
+    // GET: api/invoices
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<ActionResult<IEnumerable<InvoiceReadDto>>> GetAll()
     {
-        var dtos = await service.GetAllAsync();
-        return Ok(dtos);
+        var invoices = await invoiceService.GetAllAsync();
+        return Ok(invoices);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(Guid id)
+    // GET: api/invoices/{id}
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<InvoiceReadDto>> GetById(Guid id)
     {
-        var dto = await service.GetByIdAsync(id);
-        if (dto == null) return NotFound();
-        return Ok(dto);
+        var invoice = await invoiceService.GetByIdAsync(id);
+        if (invoice == null) return NotFound();
+        return Ok(invoice);
     }
 
+    // POST: api/invoices
     [HttpPost]
-    public async Task<IActionResult> Create(InvoiceCreateDto dto)
+    public async Task<ActionResult<InvoiceReadDto>> Create([FromBody] InvoiceCreateDto dto)
     {
-        var created = await service.CreateAsync(dto);
+        var created = await invoiceService.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, InvoiceUpdateDto dto)
+    // PUT: api/invoices/{id}
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] InvoiceUpdateDto dto)
     {
-        var ok = await service.UpdateAsync(id, dto);
-        if (!ok) return NotFound();
+        var updated = await invoiceService.UpdateAsync(id, dto);
+        if (!updated) return NotFound();
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+    // DELETE: api/invoices/{id}
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await service.DeleteAsync(id);
-        if (!ok) return NotFound();
+        var deleted = await invoiceService.DeleteAsync(id);
+        if (!deleted) return NotFound();
         return NoContent();
     }
 }

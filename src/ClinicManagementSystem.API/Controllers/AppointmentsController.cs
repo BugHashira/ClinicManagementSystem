@@ -4,45 +4,51 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicManagementSystem.API.Controllers;
 
-[ApiController]
 [Route("api/[controller]")]
-public class AppointmentsController(IAppointmentService service) : ControllerBase
+[ApiController]
+public class AppointmentsController(IAppointmentService appointmentService) : ControllerBase
 {
+
+    // GET: api/appointments
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<ActionResult<IEnumerable<AppointmentReadDto>>> GetAll()
     {
-        var dtos = await service.GetAllAsync();
-        return Ok(dtos);
+        var appointments = await appointmentService.GetAllAsync();
+        return Ok(appointments);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(Guid id)
+    // GET: api/appointments/{id}
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<AppointmentReadDto>> GetById(Guid id)
     {
-        var dto = await service.GetByIdAsync(id);
-        if (dto == null) return NotFound();
-        return Ok(dto);
+        var appointment = await appointmentService.GetByIdAsync(id);
+        if (appointment == null) return NotFound();
+        return Ok(appointment);
     }
 
+    // POST: api/appointments
     [HttpPost]
-    public async Task<IActionResult> Create(AppointmentCreateDto dto)
+    public async Task<ActionResult<AppointmentReadDto>> Create([FromBody] AppointmentCreateDto dto)
     {
-        var created = await service.CreateAsync(dto);
+        var created = await appointmentService.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, AppointmentUpdateDto dto)
+    // PUT: api/appointments/{id}
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] AppointmentUpdateDto dto)
     {
-        var ok = await service.UpdateAsync(id, dto);
-        if (!ok) return NotFound();
+        var updated = await appointmentService.UpdateAsync(id, dto);
+        if (!updated) return NotFound();
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+    // DELETE: api/appointments/{id}
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ok = await service.DeleteAsync(id);
-        if (!ok) return NotFound();
+        var deleted = await appointmentService.DeleteAsync(id);
+        if (!deleted) return NotFound();
         return NoContent();
     }
 }

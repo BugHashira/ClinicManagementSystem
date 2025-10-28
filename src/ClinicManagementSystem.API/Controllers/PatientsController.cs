@@ -6,42 +6,54 @@ namespace ClinicManagementSystem.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PatientsController(IPatientService patientService) : ControllerBase
+public class PatientsController : ControllerBase
 {
+    private readonly IPatientService _patientService;
+
+    public PatientsController(IPatientService patientService)
+    {
+        _patientService = patientService;
+    }
+
+    // GET: api/patients
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var patientDtos = await patientService.GetAllAsync();
-        return Ok(patientDtos);
+        var patients = await _patientService.GetAllAsync();
+        return Ok(patients);
     }
 
-    [HttpGet("{id}")]
+    // GET: api/patients/{id}
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var patientDto = await patientService.GetByIdAsync(id);
-        if (patientDto == null) return NotFound();
-        return Ok(patientDto);
+        var patient = await _patientService.GetByIdAsync(id);
+        if (patient == null) return NotFound();
+        return Ok(patient);
     }
 
+    // POST: api/patients
     [HttpPost]
-    public async Task<IActionResult> Create(PatientCreateDto dto)
+    public async Task<IActionResult> Create([FromBody] PatientCreateDto dto)
     {
-        var created = await patientService.CreateAsync(dto);
+        var created = await _patientService.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, PatientUpdateDto dto)
+    // PUT: api/patients/{id}
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] PatientUpdateDto dto)
     {
-        var updated = await patientService.UpdateAsync(id, dto);
+        var updated = await _patientService.UpdateAsync(id, dto);
         if (!updated) return NotFound();
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+    // DELETE: api/patients/{id}
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var deleted = await patientService.DeleteAsync(id);
+        var deleted = await _patientService.DeleteAsync(id);
         if (!deleted) return NotFound();
         return NoContent();
     }
